@@ -8,15 +8,25 @@ create_keys() {
   ssh-keygen -t rsa -b 4096 -f ./.ssh/key
 }
 
-terraform_apply() {
+terraform_init_apply() {
   local public_key
   public_key="$(cat ./.ssh/key.pub)"
   terraform init
   terraform apply -var "public_key=${public_key}"
 }
 
+terraform_apply() {
+  local public_key
+  public_key="$(cat ./.ssh/key.pub)"
+  terraform apply -var "public_key=${public_key}"
+}
+
 run_up() {
   create_keys
+  terraform_init_apply
+}
+
+run_apply() {
   terraform_apply
 }
 
@@ -58,6 +68,7 @@ main() {
 
   case "$1" in
     up) run_up ;;
+    apply) run_apply ;;
     down) run_down ;;
     connect) run_connect ;;
     help|-h|--help) usage ;;
