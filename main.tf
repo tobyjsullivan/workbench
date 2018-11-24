@@ -12,6 +12,8 @@ provider "aws" {
   region = "ap-southeast-2"
 }
 
+data "aws_region" "current" {}
+
 variable "aws_availability_zones" {
   type = "map"
   default = {
@@ -33,6 +35,15 @@ variable "main_subnet_cidr_blocks" {
   }
 }
 
+variable "ubuntu_amis" {
+  type = "map"
+
+  default = {
+    "us-east-1" = "ami-0ac019f4fcb7cb7e6"
+    "ap-southeast-2" = "ami-d38a4ab1"
+  }
+}
+
 resource "aws_vpc" "main" {
   cidr_block = "${var.vpc_cidr_block}"
   enable_dns_support = "true"
@@ -42,7 +53,7 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "main_az1" {
   cidr_block = "${lookup(var.main_subnet_cidr_blocks, "0")}"
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "${lookup(var.aws_availability_zones, "0")}"
+  availability_zone = "${data.aws_region.current.name}a"
 }
 
 
@@ -92,7 +103,7 @@ resource "aws_key_pair" "workbench" {
 }
 
 resource "aws_instance" "workbench" {
-  ami           = "ami-0ac019f4fcb7cb7e6"
+  ami           = "${lookup(var.ubuntu_amis, data.aws_region.current.name)}"
   instance_type = "t2.micro"
 
   depends_on = ["aws_internet_gateway.gw"]
